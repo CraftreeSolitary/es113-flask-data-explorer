@@ -1,0 +1,135 @@
+<html>
+
+	<head>
+		<title>Tutorial 2</title>
+		
+		<style>
+			.side_button
+			{
+				height : 3.5vw;
+				border-bottom: 0.1vw solid white;
+			}
+		
+			.sidebar
+			{
+				width : 5%;
+				background : black;
+				float : left;
+				height : 100%;
+				color : white;
+				text-align : center;
+			}
+
+			.main
+			{
+				width : 95%;
+				background : pink;
+				float : left;
+				height : 100%;
+			}
+			body
+			{
+				margin : 0px;
+			}
+		</style>
+	</head>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+
+	<body>
+		<div class = "sidebar">
+			<div class = "side_button" onclick="fun_a()">
+				<h3>A</h3>
+			</div>
+			<div class = "side_button" onclick="fun_b()">
+				<h3>B</h3>
+			</div>
+			<div class = "side_button" onclick="fun_c()">
+				<h3>C</h3>
+			</div>
+		</div>
+		
+		<div class = "main">
+			<div class = "class_a" id = "view_a">
+				<h3>Welcome !!!</h3>
+			</div>
+			
+			<div class = "class_b" id = "view_b" hidden>
+				<canvas id="bar_chart" style="max-width:80%; "></canvas>
+			</div>
+			
+			<div class = "class_c" id = "view_c" hidden>
+				<canvas id="pie_chart" style="max-width:80%;"></canvas>
+			</div>
+		</div>
+		
+	
+		<script>				
+			function fun_a()
+			{
+				document.getElementById('view_a').hidden = false;
+				document.getElementById('view_b').hidden = true;
+				document.getElementById('view_c').hidden = true;
+			}
+			
+			function fun_b()
+			{
+				document.getElementById('view_a').hidden = true;
+				document.getElementById('view_b').hidden = false;
+				document.getElementById('view_c').hidden = true;
+			}
+			
+			function fun_c()
+			{
+				document.getElementById('view_a').hidden = true;
+				document.getElementById('view_b').hidden = true;
+				document.getElementById('view_c').hidden = false;
+			}
+			
+		
+		
+			const xValues = {{ bar_x | safe }};
+			const yValues = {{ bar_y | safe }};
+
+			new Chart("bar_chart", {
+				type: "bar",
+				data: 
+				{
+					labels: xValues,
+					datasets: 
+					[{
+						fill: false,
+						//backgroundColor:"#46246a",
+						backgroundColor:"#937aa1",
+						//backgroundColor:"#3EB489",
+						borderColor: "#FFFFFF",
+						data: yValues
+					}],
+				}
+			});
+			
+			
+			const xValues_2 = {{ pie_x | safe }};
+			const yValues_2 = {{ pie_y | safe }};
+			
+			new Chart("pie_chart", {
+				type: "pie",
+				data: 
+				{
+					labels: xValues_2,
+					datasets: 
+					[{
+						fill: false,
+						//backgroundColor:"#46246a",
+						backgroundColor:"#937aa1",
+						//backgroundColor:"#3EB489",
+						borderColor: "#FFFFFF",
+						data: yValues_2
+					}],
+				}
+			});
+		</script>
+	
+	</body>
+
+</html>

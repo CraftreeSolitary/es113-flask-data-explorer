@@ -1,46 +1,101 @@
-from flask import Flask, redirect, url_for, request, Response, render_template
+from flask import Flask, render_template, request, redirect, flash
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField, SelectField, SelectMultipleField
+from wtforms import widgets
+from wtforms.validators import DataRequired
 from flask_mysqldb import MySQL
-import json
+import yaml
 
 app = Flask(__name__)
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'solitarysrootpassword'
-app.config['MYSQL_DB'] = 'eb_database'
+
+# Secret Key!
+app.config['SECRET_KEY'] = "my super secret key that no one is supposed to know"
+
+# Configure db
+db = yaml.safe_load(open('db.yaml'))
+
+app.config['MYSQL_HOST'] = db['mysql_host']
+app.config['MYSQL_USER'] = db['mysql_user']
+app.config ['MYSQL_PASSWORD'] = db['mysql_password']
+app.config ['MYSQL_DB'] = db['mysql_db']
 
 mysql = MySQL(app)
 
+# This code from WTForms docs, this class changes the way SelectMultipleField
+# is rendered by jinja
+# https://wtforms.readthedocs.io/en/3.0.x/specific_problems/
+class MultiCheckboxField(SelectMultipleField):
+    """
+    A multiple-select, except displays a list of checkboxes.
 
-@app.route('/')
-def main_page():
+    Iterating the field will produce subfields, allowing custom rendering of
+    the enclosed checkbox fields.
+    """
+    widget = widgets.ListWidget(prefix_label=False)
+    option_widget = widgets.CheckboxInput()
 
-    cursor = mysql.connection.cursor()
-    cursor.execute("select movie_id, median_rating from ratings LIMIT 10;")
-    data = cursor.fetchall()
+class ColumnForm(FlaskForm):
+    bond_number = StringField("Enter Bond Number")
+    select_multiple_field = MultiCheckboxField(choices = ["Reference No (URN)", "Journal Date", "Date of Purchase", "Date of Expiry", "Name of the Purchaser", "Purchase Prefix", "Redemption Prefix", "Purchase Denominations", "Redemption Denominations", "Issue Branch Code", "Issue Teller", "Date of Encashment", "Name of the Political Party", "Account no. of Political Party", "Pay Branch Code", "Pay Teller"])
+    submit = SubmitField()
 
-    arr1 = []
-    arr2 = []
-    for i in range(len(data)):
-        arr1.append(data[i][0])
-        arr2.append(data[i][1])
+class CompanyForm(FlaskForm):
+    company = StringField("Enter Company/Individual Name")
+    submit = SubmitField()
 
-    cursor.execute("select COUNT(movie_id), genre from genre group by genre;")
-    data = cursor.fetchall()
+@app.route("/")
+def index():
+    return render_template("index.html")
 
-    arr3 = []
-    arr4 = []
-    for i in range(len(data)):
-        arr3.append(data[i][0])
-        arr4.append(data[i][1])    
+@app.route("/search", methods = ["GET", "POST"])
+def search():
+    form = ColumnForm()
+    bond_number = None
+    table = None
+    headings = None
+    if request.method == "POST":
+        bond_number = form.bond_number.data
+        headings = tuple(form.select_multiple_field.data)
+        form.bond_number.data = None
+        form.select_multiple_field.data = None
+    if bond_number:
+        cur = mysql.connection.cursor()
+        cur.execute("select " + ",".join(["`"+x+"`" for x in headings]) + f" from purchase_details as pd right join redemption_details as rd on rd.`Bond Number`=pd.`Bond Number` where pd.`Bond Number` = {bond_number};")
+        table = cur.fetchall()
+    return render_template("search.html", form=form, bond_number=bond_number, table=table, headings=headings)
 
-    cursor.close()
+@app.route("/company_individual_stats", methods = ["GET", "POST"])
+def company_individual_stats():
+    form = CompanyForm()
+    company = None
+    table = None
+    xaxis = None
+    yaxis = None
+    yaxis2 = None
+    if request.method == "POST":
+        company = form.company.data
+        form.company.data = None
+    if company:
+        cur = mysql.connection.cursor()
+        cur.execute(f"select `Date of Purchase`, `Purchase Denominations` from purchase_details as pd right join redemption_details as rd on rd.`Bond Number`=pd.`Bond Number` where `Name of the Purchaser` = '{company.upper()}';")
+        data = cur.fetchall()
+        table = []
+        data_dict = {}
+        # year : (value, count)
+        for row in data:
+            if int(str(row[0])[:4]) in data_dict:
+                data_dict[int(str(row[0])[:4])][0] += int("".join(row[1].split(",")))
+                data_dict[int(str(row[0])[:4])][1] += 1
+            else:
+                data_dict[int(str(row[0])[:4])] = [int("".join(row[1].split(","))), 1]
+        for year in data_dict:
+            table.append((year, data_dict[year][0], data_dict[year][1]))
+        table = tuple(table)
+        xaxis = [row[0] for row in table]
+        yaxis = [row[1] for row in table]
+        yaxis2 = [row[2] for row in table]
+    return render_template("company_individual_stats.html", form=form, company=company, table=table, xaxis = xaxis, yaxis = yaxis, yaxis2=yaxis2)
 
-    print(arr3)
-    print(arr4)
-
-    return render_template("index.html", bar_x = json.dumps(arr1), bar_y = json.dumps(arr2),
-                           pie_x = json.dumps(arr4), pie_y = json.dumps(arr3))
-
-
-if __name__ == '__main__':
-   app.run(host="0.0.0.0", port="8900", debug = True) 
+@app.route("/political_party_stats")
+def political_party_stats():
+    return render_template("political_party_stats.html")

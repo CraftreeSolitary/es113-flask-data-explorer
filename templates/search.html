@@ -1,0 +1,71 @@
+{% extends 'base.html' %} 
+
+{% block content %}
+{% if bond_number %}
+
+<table class="table table-dark table-striped">
+  <thead>
+  <tr>
+    {% for header in headings %}
+    <th scope="col">{{ header }}</th>
+    {% endfor %}
+  </tr>
+</thead>
+<tbody>
+  {% for row in table %}
+  <tr>
+    {% for cell in row %}
+    <td scope="row">{{ cell }}</td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</tbody>
+</table>
+
+
+{% else %}
+<head>
+</head>
+
+<body>
+
+    <style>
+        .dropdown-check-list ul.items {
+            padding: 2px;
+            display: none;
+            margin: 0;
+            border: 1px solid #ccc;
+            border-top: none;
+        }
+
+        .dropdown-check-list ul.items li {
+            list-style: none;
+        }
+
+        .dropdown-check-list.visible .items {
+            display: block;
+        }
+    </style>
+
+    <form action="{{ url_for('search') }}" method="POST">
+        {{ form.hidden_tag() }}
+        {{ form.bond_number.label(class="form-label") }}
+        {{ form.bond_number(class="form-control") }}
+        <br/>
+    
+        <div class="dropdown">
+          <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+            Select Details
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+            {{ form.select_multiple_field(class="items") }}
+          </ul>
+        </div>
+        <br/><br/>
+        {{ form.submit(class="btn btn-secondary") }}
+      </form>
+   
+
+</body>
+{% endif %}
+{% endblock %} 

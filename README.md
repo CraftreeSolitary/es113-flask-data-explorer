@@ -1,6 +1,7 @@
 # es113-flask-data-explorer
 Devansh Lodha \
-23110091
+23110091 \
+IIT Gandhinagar
 ## Answers to all questions asked in 1e
 ### 1e1
 Implement a robust search functionality that allows users to quickly

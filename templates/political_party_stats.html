@@ -1,4 +1,91 @@
 {% extends 'base.html' %} 
 
 {% block content %}
+{% if party %}
+{% if not table %}
+<h3> Political Party: {{ party }} is not in the database</h3>
+{% else %}
+
+<h1>Statistics for {{ party|title }}</h1>
+<table class="table table-dark table-striped">
+  <thead>
+  <tr>
+    {% for header in ["Year", "Total Value", "Number of Bonds Encashed"] %}
+    <th scope="col">{{ header }}</th>
+    {% endfor %}
+  </tr>
+</thead>
+<tbody>
+  {% for row in table %}
+  <tr>
+    {% for cell in row %}
+    <td scope="row">{{ cell }}</td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</tbody>
+</table>
+<div>
+  <canvas id="bar_chart"></canvas>
+</div>
+<br/>
+<div>
+  <canvas id="bar_chart_2"></canvas>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+<script>
+  
+  const x_axis = {{ xaxis|safe }}
+  const y_axis = {{ yaxis|safe }}
+  const y_axis_2 = {{ yaxis2|safe }}
+
+  new Chart("bar_chart", {
+      type: "bar",
+      data:
+      {
+          labels: x_axis,
+          datasets:
+          [{
+              label: "Total Value of Bonds",
+              backgroundColor: "#eb0028",
+              borderColor: "#FFFFFF",
+              data: y_axis
+          }],
+      }
+  });
+
+  new Chart("bar_chart_2", {
+      type: "bar",
+      data:
+      {
+          labels: x_axis,
+          datasets:
+          [{
+              label: "Number of Bonds Encashed",
+              backgroundColor: "#000000",
+              borderColor: "#FFFFFF",
+              data: y_axis_2
+          }],
+      }
+  });
+</script>
+{% endif %}
+
+{% else %}
+<head>
+</head>
+
+<body>
+
+    <form action="{{ url_for('political_party_stats') }}" method="POST">
+        {{ form.hidden_tag() }}
+        {{ form.party.label(class="form-label") }}
+        {{ form.party(class="form-control") }}
+        <br/>
+        {{ form.submit(class="btn btn-secondary") }}
+      </form>
+   
+
+</body>
+{% endif %}
 {% endblock %} 

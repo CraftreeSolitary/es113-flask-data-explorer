@@ -1,5 +1,87 @@
 {% extends 'base.html' %} 
 
 {% block content %}
-Welcome
+<h1>ES113: Flask Data Explorer Application</h1>
+Devansh Lodha <br>
+23110091 <br>
+IIT Gandhinagar <br>
+
+<h4> Please click on any of the navbar items to access desired functionality</h4>
+
+<head>
+<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+    * {
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    }
+</style>
+</head>
+<body>
+</br>
+<h2>Bonus Task</h2>
+<h3>Alluvial Diagram for Purchaser to Political Party</h2>
+    <center>
+        <button type="button" id="download-button" class="btn btn-success">Download Chart</button>
+    </center>
+    
+    <br/>
+    <canvas id="myChart"></canvas>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12.0/dist/chartjs-chart-sankey.min.js"></script>
+    <script>
+    // setup 
+    const data = {
+        datasets: [{
+        label: 'Weekly Sales',
+        data: [
+            {% for row in table %}
+            {from: '{{ row[0] }}', to: '{{ row[1] }}', flow: {{ row[2] }}},
+            {% endfor %}
+        ],
+        borderWidth: 1
+        }]
+    };
+
+    // config 
+    const config = {
+        type: 'sankey',
+        data,
+        options: {
+            aspectRatio:0.05,
+        scales: {
+            y: {
+            beginAtZero: true
+            }
+        }
+        }
+    };
+
+    // render init block
+    const myChart = new Chart(
+        document.getElementById('myChart'),
+        config
+    );
+
+    // Instantly assign Chart.js version
+    const chartVersion = document.getElementById('chartVersion');
+    chartVersion.innerText = Chart.version;
+
+    const chartCanvas = document.getElementById("myChart"); 
+
+    function downloadChartImage(type = "image/png") {
+        const imageData = chartCanvas.toDataURL(type); // Get base64 encoded image data
+        const link = document.createElement("a");
+        link.href = imageData;
+        link.download = "chart.png"; // Set default filename (change extension for JPEG)
+        link.click();
+    }
+
+    // Add a button or link to trigger the download function
+    const downloadButton = document.getElementById("download-button");
+    downloadButton.addEventListener("click", () => downloadChartImage());
+    </script>
+<body>
 {% endblock %} 

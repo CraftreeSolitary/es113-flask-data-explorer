@@ -1,0 +1,111 @@
+{% extends 'base.html' %} 
+
+{% block content %}
+{% if company %}
+{% if not table %}
+<h3> Company/Individual: {{ company }} is not in the database</h3>
+{% else %}
+
+<h1>Donation Statistics for {{ company|title }}</h1>
+<h3> The total value donated is: {{ total }}</h3>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+
+<div>
+    <canvas id="pie_chart"></canvas>
+</div>
+<br/>
+<center>
+    <button type="button" id="download-button" class="btn btn-success">Download Chart</button>
+</center>
+
+<br/>
+<script>
+    const x_axis = {{ xaxis|safe }}
+    const y_axis = {{ yaxis|safe }}
+
+    function generateColorByCategoryCount(index, numCategories) {
+        const colorSpectrum = ["#FF0000", "#FFFF00", "#00FF00", "#0000FF", "#FF00FF"]; // Base color palette
+        const slice = Math.floor(index / (numCategories / colorSpectrum.length)); // Map index to color palette
+
+        // Use color variations for a smoother gradient
+        const brightness = 1 - (index % (numCategories / colorSpectrum.length)) / (numCategories / colorSpectrum.length);
+        const hslString = `hsla(${getColorHue(slice, colorSpectrum.length)}, 100%, ${brightness * 50}%)`;
+        return hslString;
+    }
+
+    function getColorHue(slice, colorCount) {
+        // Calculate Hue based on slice position and color palette length
+        return 360 * slice / colorCount;
+    }
+
+    new Chart("pie_chart", {
+        type: "pie",
+        data:
+        {
+            labels: x_axis,
+            datasets:
+            [{
+                backgroundColor: y_axis.map((_, index) => generateColorByCategoryCount(index, x_axis.length)),
+                borderColor: "#FFFFFF",
+                data: y_axis
+            }],
+        }
+    });
+
+    const chartCanvas = document.getElementById("pie_chart"); 
+
+    function downloadChartImage(type = "image/png") {
+        const imageData = chartCanvas.toDataURL(type); // Get base64 encoded image data
+        const link = document.createElement("a");
+        link.href = imageData;
+        link.download = "chart.png"; // Set default filename (change extension for JPEG)
+        link.click();
+    }
+
+    // Add a button or link to trigger the download function
+    const downloadButton = document.getElementById("download-button");
+    downloadButton.addEventListener("click", () => downloadChartImage());
+</script>
+
+
+
+<table class="table table-dark table-striped">
+  <thead>
+  <tr>
+    {% for header in ["Name of the Poltical Party", "Value Donated"] %}
+    <th scope="col">{{ header }}</th>
+    {% endfor %}
+  </tr>
+</thead>
+<tbody>
+  {% for row in table %}
+  <tr>
+    {% for cell in row %}
+    <td scope="row">{{ cell }}</td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</tbody>
+</table>
+{% endif %}
+
+{% else %}
+<head>
+</head>
+
+<body>
+
+    <form action="{{ url_for('company_donation_stats') }}" method="POST">
+        {{ form.hidden_tag() }}
+        {{ form.company.label(class="form-label") }}
+        {{ form.company(class="form-control") }}
+        <br/>
+        {{ form.submit(class="btn btn-secondary") }}
+      </form>
+   
+
+</body>
+
+{% endif %}
+{% endblock %} 

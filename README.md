@@ -1,5 +1,6 @@
 # es113-flask-data-explorer
-
+Devansh Lodha \
+23110091
 ## Answers to all questions asked in 1e
 ### 1e1
 Implement a robust search functionality that allows users to quickly
@@ -112,6 +113,7 @@ $env:FLASK_APP = "app"
 ```bash
 python -m flask run
 ```
+17. Open the localhost link shown in your terminal in a browser to access the app
 
 ## Bonus Feature: Alluvial Diagram to show Flow of Money
 _chart has not rendered completely due to processing limitations_
